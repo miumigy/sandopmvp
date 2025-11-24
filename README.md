@@ -1,72 +1,67 @@
-# S&OP MVP アプリケーション
+# S&OP MVP Application
 
-このアプリケーションは、営業・製造・物流・財務の各計画を統合し、AIによる調整提案を行うS&OP（Sales and Operations Planning）支援ツールのMVP（Minimum Viable Product）です。
+This application is a Minimum Viable Product (MVP) for Sales and Operations Planning (S&OP), integrating sales, production, logistics, and financial plans with AI-driven adjustment proposals.
 
-## 機能概要
+## Features
 
-*   **ダッシュボード**: PSI（生産・販売・在庫）、機会損失、AI提案、財務パフォーマンス（予実管理）の可視化。
-*   **販売計画**: 月別の販売数・売単価の入力（スプレッドシート形式、コピペ対応）。
-*   **生産計画**: 月別の生産数・原単価の入力。
-*   **物流計画**: 初期在庫、倉庫キャパシティ、保管コストの設定。
-*   **財務計画**: 各部門の予算設定。
-*   **AI提案**: 在庫過多や欠品リスクに対する調整案の提示。
-*   **データ保存**: SQLiteを使用したローカルデータベースへの保存。
+*   **Dashboard**: Visualization of PSI (Production, Sales, Inventory), Opportunity Loss, AI Proposals, and Financial Performance (Budget vs Actual).
+*   **Sales Plan**: Monthly sales quantity and price input (Spreadsheet-like UI, Copy-Paste support).
+*   **Production Plan**: Monthly production quantity and cost input.
+*   **Logistics Plan**: Configuration for initial inventory, warehouse capacity, and storage costs.
+*   **Financial Plan**: Budget setting for each department.
+*   **AI Proposals**: Suggestions for inventory optimization and risk mitigation.
+*   **Data Persistence**: Local data storage using SQLite.
 
-## ローカル環境での実行方法
+## How to Run Locally
 
-このプロジェクトをローカル環境で実行するには、以下の手順に従ってください。
+Follow these steps to run the project locally.
 
-### 前提条件
+### Prerequisites
 
-*   Node.js (v18以上推奨) がインストールされていること。
+*   Node.js (v18 or higher) installed.
 
-### 手順
+### Steps
 
-1.  **リポジトリのクローンまたはダウンロード**
+1.  **Clone the repository**
     ```bash
-    git clone <repository-url>
-    cd sparse-filament
+    git clone https://github.com/miumigy/sandopmvp.git
+    cd sandopmvp
     ```
-    ※ フォルダ名は適宜変更してください。
 
-2.  **依存関係のインストール**
+2.  **Install dependencies**
     ```bash
     npm install
     ```
 
-3.  **開発サーバーの起動**
+3.  **Start the development server**
     ```bash
     npm run dev
     ```
 
-4.  **ブラウザでアクセス**
-    ブラウザを開き、`http://localhost:3000` にアクセスしてください。
+4.  **Access the application**
+    Open your browser and navigate to `http://localhost:3000`.
 
-## テストの実行
+## Running Tests
 
-ユニットテストとコンポーネントテストを実行するには、以下のコマンドを使用します。
+To run unit and component tests:
 
 ```bash
 npm test
 ```
 
-## GitHubでの管理方法
+## GitHub Repository
 
-このプロジェクトをGitHubで管理するには、以下の手順を実行してください。
+This project is managed at:
+https://github.com/miumigy/sandopmvp
 
-1.  GitHub上で新しいリポジトリを作成します（空のリポジトリ）。
-2.  ローカルディレクトリで以下のコマンドを実行します。
-
+To push local changes:
 ```bash
-git init
 git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin <your-github-repo-url>
-git push -u origin main
+git commit -m "Your changes"
+git push
 ```
 
-## 技術スタック
+## Tech Stack
 
 *   **Frontend**: Next.js (App Router), React, Recharts, Lucide React
 *   **Styling**: Vanilla CSS (CSS Modules)
