@@ -1,0 +1,90 @@
+.container {
+  padding-bottom: 2rem;
+}
+
+.title {
+  margin-bottom: 2rem;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chartCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chartCard h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #666;
+  font-size: 1rem;
+}
+
+.aiSection {
+  background: linear-gradient(to right, #f8fafc, #f1f5f9);
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.aiSection h2 {
+  margin-top: 0;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.proposalList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.proposalCard {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid var(--primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.proposalHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.proposalMessage {
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+}
+
+.proposalImpact {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #10b981;
+  font-weight: 500;
+}
+
+.noProposals {
+  color: #64748b;
+  font-style: italic;
+}
