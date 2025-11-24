@@ -61,6 +61,34 @@ git commit -m "Your changes"
 git push
 ```
 
+## Architecture
+
+```mermaid
+graph TD
+    subgraph Frontend [Frontend (Next.js App Router)]
+        Dashboard[Dashboard Page]
+        Inputs[Input Pages (Sales, Prod, etc.)]
+        Context[SOPContext (State Management)]
+    end
+
+    subgraph Backend [Backend (Next.js API Routes)]
+        API[API Route (/api/data)]
+        Logic[Business Logic (psiLogic, aiLogic)]
+    end
+
+    subgraph Database [Database]
+        SQLite[(SQLite DB)]
+    end
+
+    Dashboard --> Context
+    Inputs --> Context
+    Context -- Fetch/Save Data --> API
+    API --> Logic
+    Logic --> SQLite
+    SQLite --> Logic
+    Logic --> API
+```
+
 ## Tech Stack
 
 *   **Frontend**: Next.js (App Router), React, Recharts, Lucide React
