@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, ShoppingCart, Factory, Truck, DollarSign, Save } from "lucide-react";
 import styles from "./Layout.module.css";
 import { useSOP } from "@/context/SOPContext";
+import ScenarioSelector from "./ScenarioSelector";
 
 const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -44,10 +45,13 @@ export default function Layout({ children }) {
                     <h1 className={styles.title}>
                         {navItems.find((item) => item.href === pathname)?.name || "S&OP Planner"}
                     </h1>
-                    <button onClick={saveData} className={styles.saveButton}>
-                        <Save size={18} />
-                        Save Data
-                    </button>
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        <ScenarioSelector />
+                        <button onClick={saveData} className={styles.saveButton}>
+                            <Save size={18} />
+                            Save Data
+                        </button>
+                    </div>
                 </header>
                 <div className={styles.content}>{children}</div>
             </main>

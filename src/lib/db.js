@@ -1,95 +1,114 @@
 import Database from "better-sqlite3";
 import path from "path";
 
-const dbPath = path.join(process.cwd(), "sop_v2.db");
+const dbFilename = process.env.DB_FILENAME || "sop_v3.db";
+const dbPath = path.join(process.cwd(), dbFilename);
 const db = new Database(dbPath);
 
 // Initialize tables
 db.exec(`
+  CREATE TABLE IF NOT EXISTS scenarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS sales_plan (
-    month INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scenario_id INTEGER,
+    month INTEGER,
     quantity INTEGER,
-    price REAL
+    price REAL,
+    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
   );
 
   CREATE TABLE IF NOT EXISTS production_plan (
-    month INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scenario_id INTEGER,
+    month INTEGER,
     quantity INTEGER,
-    cost REAL
+    cost REAL,
+    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
   );
 
   CREATE TABLE IF NOT EXISTS financial_plan (
-    month INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scenario_id INTEGER,
+    month INTEGER,
     budget REAL,
     salesBudget REAL,
     productionBudget REAL,
-    logisticsBudget REAL
+    logisticsBudget REAL,
+    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
   );
 
   CREATE TABLE IF NOT EXISTS logistics_plan (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scenario_id INTEGER,
     initialInventory INTEGER,
     maxCapacity INTEGER,
     fixedCost REAL,
-    overflowCost REAL
+    overflowCost REAL,
+    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
   );
 `);
 
 // Seed Data if empty
 const seedData = () => {
-    const salesCount = db.prepare("SELECT COUNT(*) as count FROM sales_plan").get().count;
-    if (salesCount === 0) {
-        const insertSales = db.prepare("INSERT INTO sales_plan (month, quantity, price) VALUES (@month, @quantity, @price)");
+    const scenarioCount = db.prepare("SELECT COUNT(*) as count FROM scenarios").get().count;
+
+    if (scenarioCount === 0) {
+        // Create Default Scenario
+        const insertScenario = db.prepare("INSERT INTO scenarios (name) VALUES (@name)");
+        const info = insertScenario.run({ name: "Base Plan" });
+        const defaultScenarioId = info.lastInsertRowid;
+
+        // Seed Sales Plan
+        const insertSales = db.prepare("INSERT INTO sales_plan (scenario_id, month, quantity, price) VALUES (@scenario_id, @month, @quantity, @price)");
         const insertManySales = db.transaction((data) => {
             for (const row of data) insertSales.run(row);
         });
-        // Scenario: High Variance. Peak is 200. Low is 50.
         const salesData = Array.from({ length: 12 }, (_, i) => ({
+            scenario_id: defaultScenarioId,
             month: i + 1,
             quantity: (i >= 3 && i <= 7) ? 50 : 200, // Summer slump (M4-M8)
             price: 100,
         }));
         insertManySales(salesData);
-    }
 
-    const prodCount = db.prepare("SELECT COUNT(*) as count FROM production_plan").get().count;
-    if (prodCount === 0) {
-        const insertProd = db.prepare("INSERT INTO production_plan (month, quantity, cost) VALUES (@month, @quantity, @cost)");
+        // Seed Production Plan
+        const insertProd = db.prepare("INSERT INTO production_plan (scenario_id, month, quantity, cost) VALUES (@scenario_id, @month, @quantity, @cost)");
         const insertManyProd = db.transaction((data) => {
             for (const row of data) insertProd.run(row);
         });
-        // Scenario: Level Production matched to Peak Sales (200)
         const prodData = Array.from({ length: 12 }, (_, i) => ({
+            scenario_id: defaultScenarioId,
             month: i + 1,
             quantity: 200,
             cost: 60,
         }));
         insertManyProd(prodData);
-    }
 
-    const finCount = db.prepare("SELECT COUNT(*) as count FROM financial_plan").get().count;
-    if (finCount === 0) {
-        const insertFin = db.prepare("INSERT INTO financial_plan (month, budget, salesBudget, productionBudget, logisticsBudget) VALUES (@month, @budget, @salesBudget, @productionBudget, @logisticsBudget)");
+        // Seed Financial Plan
+        const insertFin = db.prepare("INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES (@scenario_id, @month, @budget, @salesBudget, @productionBudget, @logisticsBudget)");
         const insertManyFin = db.transaction((data) => {
             for (const row of data) insertFin.run(row);
         });
-        // Scenario: Budget set for "normal" operations, not overflow
         const finData = Array.from({ length: 12 }, (_, i) => ({
+            scenario_id: defaultScenarioId,
             month: i + 1,
             budget: 10000,
-            salesBudget: 20000, // Expecting high sales
-            productionBudget: 12000, // 200 * 60
-            logisticsBudget: 2000, // Fixed 1000 + some buffer
+            salesBudget: 20000,
+            productionBudget: 12000,
+            logisticsBudget: 2000,
         }));
         insertManyFin(finData);
-    }
 
-    const logCount = db.prepare("SELECT COUNT(*) as count FROM logistics_plan").get().count;
-    if (logCount === 0) {
-        const insertLog = db.prepare("INSERT INTO logistics_plan (id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES (1, @initialInventory, @maxCapacity, @fixedCost, @overflowCost)");
+        // Seed Logistics Plan
+        const insertLog = db.prepare("INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES (@scenario_id, @initialInventory, @maxCapacity, @fixedCost, @overflowCost)");
         insertLog.run({
+            scenario_id: defaultScenarioId,
             initialInventory: 100,
-            maxCapacity: 300, // Will be exceeded quickly
+            maxCapacity: 300,
             fixedCost: 1000,
             overflowCost: 20,
         });
@@ -98,59 +117,128 @@ const seedData = () => {
 
 seedData();
 
-export const getSalesPlan = () => {
-    const stmt = db.prepare("SELECT * FROM sales_plan ORDER BY month");
-    return stmt.all();
+export const getScenarios = () => {
+    return db.prepare("SELECT * FROM scenarios").all();
 };
 
-export const saveSalesPlan = (plan) => {
-    const insert = db.prepare(
-        "INSERT OR REPLACE INTO sales_plan (month, quantity, price) VALUES (@month, @quantity, @price)"
-    );
-    const insertMany = db.transaction((plan) => {
-        for (const row of plan) insert.run(row);
+export const createScenario = (name) => {
+    const stmt = db.prepare("INSERT INTO scenarios (name) VALUES (?)");
+    const info = stmt.run(name);
+    return { id: info.lastInsertRowid, name };
+};
+
+// Clone a scenario (copy all data from sourceId to new scenario)
+export const cloneScenario = (sourceId, newName) => {
+    const newScenario = createScenario(newName);
+    const targetId = newScenario.id;
+
+    const copySales = db.prepare(`
+        INSERT INTO sales_plan (scenario_id, month, quantity, price)
+        SELECT ?, month, quantity, price FROM sales_plan WHERE scenario_id = ?
+    `);
+
+    const copyProd = db.prepare(`
+        INSERT INTO production_plan (scenario_id, month, quantity, cost)
+        SELECT ?, month, quantity, cost FROM production_plan WHERE scenario_id = ?
+    `);
+
+    const copyFin = db.prepare(`
+        INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget)
+        SELECT ?, month, budget, salesBudget, productionBudget, logisticsBudget FROM financial_plan WHERE scenario_id = ?
+    `);
+
+    const copyLog = db.prepare(`
+        INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost)
+        SELECT ?, initialInventory, maxCapacity, fixedCost, overflowCost FROM logistics_plan WHERE scenario_id = ?
+    `);
+
+    const transaction = db.transaction(() => {
+        copySales.run(targetId, sourceId);
+        copyProd.run(targetId, sourceId);
+        copyFin.run(targetId, sourceId);
+        copyLog.run(targetId, sourceId);
     });
-    insertMany(plan);
+
+    transaction();
+    return newScenario;
 };
 
-export const getProductionPlan = () => {
-    const stmt = db.prepare("SELECT * FROM production_plan ORDER BY month");
-    return stmt.all();
+export const getSalesPlan = (scenarioId) => {
+    const stmt = db.prepare("SELECT * FROM sales_plan WHERE scenario_id = ? ORDER BY month");
+    return stmt.all(scenarioId);
 };
 
-export const saveProductionPlan = (plan) => {
-    const insert = db.prepare(
-        "INSERT OR REPLACE INTO production_plan (month, quantity, cost) VALUES (@month, @quantity, @cost)"
-    );
-    const insertMany = db.transaction((plan) => {
-        for (const row of plan) insert.run(row);
+export const saveSalesPlan = (scenarioId, plan) => {
+    // Delete existing for this scenario and month to avoid duplicates or complex upserts with ID
+    // Or better: use INSERT OR REPLACE if we had a unique constraint on (scenario_id, month).
+    // Let's add a unique index or just delete and re-insert for simplicity in this MVP.
+    // Actually, let's use a transaction to delete and insert.
+
+    const deleteStmt = db.prepare("DELETE FROM sales_plan WHERE scenario_id = ? AND month = ?");
+    const insertStmt = db.prepare("INSERT INTO sales_plan (scenario_id, month, quantity, price) VALUES (@scenario_id, @month, @quantity, @price)");
+
+    const saveTransaction = db.transaction((planItems) => {
+        for (const row of planItems) {
+            deleteStmt.run(scenarioId, row.month);
+            insertStmt.run({ ...row, scenario_id: scenarioId });
+        }
     });
-    insertMany(plan);
+
+    saveTransaction(plan);
 };
 
-export const getFinancialPlan = () => {
-    const stmt = db.prepare("SELECT * FROM financial_plan ORDER BY month");
-    return stmt.all();
+export const getProductionPlan = (scenarioId) => {
+    const stmt = db.prepare("SELECT * FROM production_plan WHERE scenario_id = ? ORDER BY month");
+    return stmt.all(scenarioId);
 };
 
-export const saveFinancialPlan = (plan) => {
-    const insert = db.prepare(
-        "INSERT OR REPLACE INTO financial_plan (month, budget, salesBudget, productionBudget, logisticsBudget) VALUES (@month, @budget, @salesBudget, @productionBudget, @logisticsBudget)"
-    );
-    const insertMany = db.transaction((plan) => {
-        for (const row of plan) insert.run(row);
+export const saveProductionPlan = (scenarioId, plan) => {
+    const deleteStmt = db.prepare("DELETE FROM production_plan WHERE scenario_id = ? AND month = ?");
+    const insertStmt = db.prepare("INSERT INTO production_plan (scenario_id, month, quantity, cost) VALUES (@scenario_id, @month, @quantity, @cost)");
+
+    const saveTransaction = db.transaction((planItems) => {
+        for (const row of planItems) {
+            deleteStmt.run(scenarioId, row.month);
+            insertStmt.run({ ...row, scenario_id: scenarioId });
+        }
     });
-    insertMany(plan);
+
+    saveTransaction(plan);
 };
 
-export const getLogisticsPlan = () => {
-    const stmt = db.prepare("SELECT * FROM logistics_plan WHERE id = 1");
-    return stmt.get();
+export const getFinancialPlan = (scenarioId) => {
+    const stmt = db.prepare("SELECT * FROM financial_plan WHERE scenario_id = ? ORDER BY month");
+    return stmt.all(scenarioId);
 };
 
-export const saveLogisticsPlan = (plan) => {
-    const insert = db.prepare(
-        "INSERT OR REPLACE INTO logistics_plan (id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES (1, @initialInventory, @maxCapacity, @fixedCost, @overflowCost)"
-    );
-    insert.run(plan);
+export const saveFinancialPlan = (scenarioId, plan) => {
+    const deleteStmt = db.prepare("DELETE FROM financial_plan WHERE scenario_id = ? AND month = ?");
+    const insertStmt = db.prepare("INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES (@scenario_id, @month, @budget, @salesBudget, @productionBudget, @logisticsBudget)");
+
+    const saveTransaction = db.transaction((planItems) => {
+        for (const row of planItems) {
+            deleteStmt.run(scenarioId, row.month);
+            insertStmt.run({ ...row, scenario_id: scenarioId });
+        }
+    });
+
+    saveTransaction(plan);
+};
+
+export const getLogisticsPlan = (scenarioId) => {
+    const stmt = db.prepare("SELECT * FROM logistics_plan WHERE scenario_id = ?");
+    return stmt.get(scenarioId);
+};
+
+export const saveLogisticsPlan = (scenarioId, plan) => {
+    // Logistics plan is usually single row per scenario
+    const deleteStmt = db.prepare("DELETE FROM logistics_plan WHERE scenario_id = ?");
+    const insertStmt = db.prepare("INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES (@scenario_id, @initialInventory, @maxCapacity, @fixedCost, @overflowCost)");
+
+    const saveTransaction = db.transaction(() => {
+        deleteStmt.run(scenarioId);
+        insertStmt.run({ ...plan, scenario_id: scenarioId });
+    });
+
+    saveTransaction();
 };
