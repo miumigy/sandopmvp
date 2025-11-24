@@ -65,15 +65,15 @@ git push
 
 ```mermaid
 graph TD
-    subgraph Frontend [Frontend (Next.js App Router)]
+    subgraph Frontend ["Frontend (Next.js App Router)"]
         Dashboard[Dashboard Page]
-        Inputs[Input Pages (Sales, Prod, etc.)]
-        Context[SOPContext (State Management)]
+        Inputs["Input Pages (Sales, Prod, etc.)"]
+        Context["SOPContext (State Management)"]
     end
 
-    subgraph Backend [Backend (Next.js API Routes)]
-        API[API Route (/api/data)]
-        Logic[Business Logic (psiLogic, aiLogic)]
+    subgraph Backend ["Backend (Next.js API Routes)"]
+        API["API Route (/api/data)"]
+        Logic["Business Logic (psiLogic, aiLogic)"]
     end
 
     subgraph Database [Database]
