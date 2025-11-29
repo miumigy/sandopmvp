@@ -3,7 +3,8 @@ services:
     name: sandopmvp
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    autoDeploy: true
+    buildCommand: npm install && npm test && npm run build
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
