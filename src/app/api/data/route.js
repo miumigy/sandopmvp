@@ -47,12 +47,13 @@ export async function GET(request) {
             cost: Number(row.cost)
         }));
 
-        // Transform financial plan from DB lowercase to frontend camelCase
+        // Transform financial plan from DB lowercase to frontend camelCase AND ensure numbers
         const financialPlan = financialPlanRaw.map(row => ({
             ...row,
-            salesBudget: row.salesbudget,
-            productionBudget: row.productionbudget,
-            logisticsBudget: row.logisticsbudget
+            budget: Number(row.budget),
+            salesBudget: Number(row.salesbudget ?? row.salesBudget),
+            productionBudget: Number(row.productionbudget ?? row.productionBudget),
+            logisticsBudget: Number(row.logisticsbudget ?? row.logisticsBudget)
         }));
 
         // Transform logistics plan from DB lowercase to frontend camelCase
