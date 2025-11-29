@@ -21,7 +21,7 @@ export default function LogisticsPage() {
                     <label>Initial Inventory (Units)</label>
                     <input
                         type="number"
-                        value={logisticsPlan.initialInventory}
+                        value={logisticsPlan?.initialInventory ?? 100}
                         onChange={(e) => handleChange("initialInventory", e.target.value)}
                     />
                 </div>
@@ -29,7 +29,7 @@ export default function LogisticsPage() {
                     <label>Max Warehouse Capacity (Units)</label>
                     <input
                         type="number"
-                        value={logisticsPlan.maxCapacity}
+                        value={logisticsPlan?.maxCapacity ?? 1000}
                         onChange={(e) => handleChange("maxCapacity", e.target.value)}
                     />
                 </div>
@@ -37,7 +37,7 @@ export default function LogisticsPage() {
                     <label>Fixed Warehouse Cost ($/Month)</label>
                     <input
                         type="number"
-                        value={logisticsPlan.fixedCost}
+                        value={logisticsPlan?.fixedCost ?? 5000}
                         onChange={(e) => handleChange("fixedCost", e.target.value)}
                     />
                 </div>
@@ -45,7 +45,7 @@ export default function LogisticsPage() {
                     <label>Overflow Storage Cost ($/Unit)</label>
                     <input
                         type="number"
-                        value={logisticsPlan.overflowCost}
+                        value={logisticsPlan?.overflowCost ?? 10}
                         onChange={(e) => handleChange("overflowCost", e.target.value)}
                     />
                 </div>
