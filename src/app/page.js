@@ -47,7 +47,7 @@ export default function Dashboard() {
   const totalSalesAmount = psiResults.monthlySalesAmount.reduce((acc, curr) => acc + curr, 0);
   const totalProfit = psiResults.monthlyProfit.reduce((acc, curr) => acc + curr, 0);
 
-  const totalSalesBudget = financialPlan.reduce((acc, curr) => acc + (curr.salesBudget || 0), 0);
+  const totalSalesBudget = financialPlan.reduce((acc, curr) => acc + Number(curr.salesBudget || 0), 0);
 
   const salesAchievementRate = totalSalesBudget > 0 ? ((totalSalesAmount / totalSalesBudget) * 100).toFixed(1) : 0;
 
