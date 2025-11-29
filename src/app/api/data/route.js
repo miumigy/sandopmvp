@@ -28,10 +28,24 @@ export async function GET(request) {
             return NextResponse.json({ error: "Scenario ID is required" }, { status: 400 });
         }
 
-        const salesPlan = await getSalesPlan(scenarioId);
-        const productionPlan = await getProductionPlan(scenarioId);
+        const salesPlanRaw = await getSalesPlan(scenarioId);
+        const productionPlanRaw = await getProductionPlan(scenarioId);
         const financialPlanRaw = await getFinancialPlan(scenarioId);
         const logisticsPlanRaw = await getLogisticsPlan(scenarioId);
+
+        // Transform sales plan: ensure numbers
+        const salesPlan = salesPlanRaw.map(row => ({
+            ...row,
+            quantity: Number(row.quantity),
+            price: Number(row.price)
+        }));
+
+        // Transform production plan: ensure numbers
+        const productionPlan = productionPlanRaw.map(row => ({
+            ...row,
+            quantity: Number(row.quantity),
+            cost: Number(row.cost)
+        }));
 
         // Transform financial plan from DB lowercase to frontend camelCase
         const financialPlan = financialPlanRaw.map(row => ({
