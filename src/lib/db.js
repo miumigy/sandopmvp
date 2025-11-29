@@ -48,6 +48,9 @@ if (USE_SQLITE) {
     const { Pool } = require('pg');
     pool = new Pool({
         connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false // Required for Supabase and many external Postgres providers
+        }
     });
 
     query = async (text, params) => {
