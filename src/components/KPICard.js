@@ -1,7 +1,5 @@
 import React from "react";
 import styles from "./KPICard.module.css";
-import React from "react";
-import styles from "./KPICard.module.css";
 
 export default function KPICard({ title, value, unit, trend, color = "blue" }) {
     return (

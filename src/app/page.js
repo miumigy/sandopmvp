@@ -85,7 +85,7 @@ export default function Dashboard() {
             <ComposedChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
-              <YAxis />
+              <YAxis tickFormatter={formatNumber} />
               <Tooltip formatter={formatNumber} />
               <Legend />
               <Bar dataKey="sales" fill="#0070f3" name="Sales" />
@@ -102,7 +102,7 @@ export default function Dashboard() {
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
-              <YAxis />
+              <YAxis tickFormatter={formatNumber} />
               <Tooltip formatter={formatNumber} />
               <Legend />
               <Line type="monotone" dataKey="salesAmount" stroke="#0070f3" strokeWidth={2} name="Actual Sales ($)" />
@@ -118,7 +118,7 @@ export default function Dashboard() {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
-              <YAxis />
+              <YAxis tickFormatter={formatNumber} />
               <Tooltip formatter={formatNumber} />
               <Legend />
               <Bar dataKey="loss" fill="#ef4444" name="Lost Sales (Qty)" />
