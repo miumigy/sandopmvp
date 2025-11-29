@@ -10,6 +10,8 @@ export const calculatePSI = (salesPlan, productionPlan, logisticsPlan) => {
     const monthlyLogisticsCost = [];
     const monthlyProfit = [];
 
+    const monthlySoldQty = [];
+
     // Ensure initialInventory is a number
     let currentInventory = Number(logisticsPlan.initialInventory || 0);
     console.log(`[PSI Calc] Initial Inventory: ${currentInventory} (Type: ${typeof currentInventory})`);
@@ -39,6 +41,8 @@ export const calculatePSI = (salesPlan, productionPlan, logisticsPlan) => {
             sold = available;
             loss = salesQty - available;
         }
+
+        monthlySoldQty.push(sold);
 
         const endInventory = available - sold;
         inventory.push(endInventory);
@@ -75,5 +79,6 @@ export const calculatePSI = (salesPlan, productionPlan, logisticsPlan) => {
         monthlyProductionCost,
         monthlyLogisticsCost,
         monthlyProfit,
+        monthlySoldQty,
     };
 };

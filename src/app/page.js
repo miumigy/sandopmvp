@@ -25,7 +25,7 @@ export default function Dashboard() {
   // Prepare data for charts
   const chartData = salesPlan.map((sale, index) => ({
     month: `M${sale.month}`,
-    sales: sale.quantity,
+    sales: psiResults.monthlySoldQty ? psiResults.monthlySoldQty[index] : 0,
     production: productionPlan[index]?.quantity || 0,
     inventory: psiResults.inventory[index] || 0,
     loss: psiResults.opportunityLoss[index] || 0,
