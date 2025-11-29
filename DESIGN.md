@@ -201,7 +201,7 @@ graph TB
     end
     
     subgraph "API Layer"
-        DataAPI[/api/data Route]
+        DataAPI["API: /api/data Route"]
     end
     
     subgraph "Business Logic"
