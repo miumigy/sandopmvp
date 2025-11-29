@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import path from "path";
 
 const dbFilename = process.env.DB_FILENAME || "sop_v3.db";
-const dbPath = path.join(process.cwd(), dbFilename);
+const dbPath = path.resolve(process.cwd(), dbFilename);
 const db = new Database(dbPath);
 
 // Initialize tables

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: sandopmvp
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DB_FILENAME
+        value: /data/sop_v3.db
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1
