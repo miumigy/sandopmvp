@@ -1,244 +1,306 @@
-import Database from "better-sqlite3";
-import path from "path";
+import { Pool } from "pg";
 
-const dbFilename = process.env.DB_FILENAME || "sop_v3.db";
-const dbPath = path.resolve(process.cwd(), dbFilename);
-const db = new Database(dbPath);
+// Use connection string from env or default to local
+// Note: For local dev without env, this might fail if not configured.
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+});
+
+// Helper for single query
+export const query = async (text, params) => {
+    return await pool.query(text, params);
+};
 
 // Initialize tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS scenarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+const initDb = async () => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS scenarios(
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS sales_plan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    scenario_id INTEGER,
-    month INTEGER,
-    quantity INTEGER,
-    price REAL,
-    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS production_plan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    scenario_id INTEGER,
-    month INTEGER,
-    quantity INTEGER,
-    cost REAL,
-    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS financial_plan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    scenario_id INTEGER,
-    month INTEGER,
-    budget REAL,
-    salesBudget REAL,
-    productionBudget REAL,
-    logisticsBudget REAL,
-    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS logistics_plan (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    scenario_id INTEGER,
-    initialInventory INTEGER,
-    maxCapacity INTEGER,
-    fixedCost REAL,
-    overflowCost REAL,
-    FOREIGN KEY(scenario_id) REFERENCES scenarios(id)
-  );
+);
 `);
 
-// Seed Data if empty
-const seedData = () => {
-    const scenarioCount = db.prepare("SELECT COUNT(*) as count FROM scenarios").get().count;
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS sales_plan(
+    id SERIAL PRIMARY KEY,
+    scenario_id INTEGER REFERENCES scenarios(id),
+    month INTEGER,
+    quantity INTEGER,
+    price DECIMAL
+);
+`);
 
-    if (scenarioCount === 0) {
-        // Create Default Scenario
-        const insertScenario = db.prepare("INSERT INTO scenarios (name) VALUES (@name)");
-        const info = insertScenario.run({ name: "Base Plan" });
-        const defaultScenarioId = info.lastInsertRowid;
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS production_plan(
+    id SERIAL PRIMARY KEY,
+    scenario_id INTEGER REFERENCES scenarios(id),
+    month INTEGER,
+    quantity INTEGER,
+    cost DECIMAL
+);
+`);
 
-        // Seed Sales Plan
-        const insertSales = db.prepare("INSERT INTO sales_plan (scenario_id, month, quantity, price) VALUES (@scenario_id, @month, @quantity, @price)");
-        const insertManySales = db.transaction((data) => {
-            for (const row of data) insertSales.run(row);
-        });
-        const salesData = Array.from({ length: 12 }, (_, i) => ({
-            scenario_id: defaultScenarioId,
-            month: i + 1,
-            quantity: (i >= 3 && i <= 7) ? 50 : 200, // Summer slump (M4-M8)
-            price: 100,
-        }));
-        insertManySales(salesData);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS financial_plan(
+    id SERIAL PRIMARY KEY,
+    scenario_id INTEGER REFERENCES scenarios(id),
+    month INTEGER,
+    budget DECIMAL,
+    salesBudget DECIMAL,
+    productionBudget DECIMAL,
+    logisticsBudget DECIMAL
+);
+`);
 
-        // Seed Production Plan
-        const insertProd = db.prepare("INSERT INTO production_plan (scenario_id, month, quantity, cost) VALUES (@scenario_id, @month, @quantity, @cost)");
-        const insertManyProd = db.transaction((data) => {
-            for (const row of data) insertProd.run(row);
-        });
-        const prodData = Array.from({ length: 12 }, (_, i) => ({
-            scenario_id: defaultScenarioId,
-            month: i + 1,
-            quantity: 200,
-            cost: 60,
-        }));
-        insertManyProd(prodData);
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS logistics_plan(
+    id SERIAL PRIMARY KEY,
+    scenario_id INTEGER REFERENCES scenarios(id),
+    initialInventory INTEGER,
+    maxCapacity INTEGER,
+    fixedCost DECIMAL,
+    overflowCost DECIMAL
+);
+`);
 
-        // Seed Financial Plan
-        const insertFin = db.prepare("INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES (@scenario_id, @month, @budget, @salesBudget, @productionBudget, @logisticsBudget)");
-        const insertManyFin = db.transaction((data) => {
-            for (const row of data) insertFin.run(row);
-        });
-        const finData = Array.from({ length: 12 }, (_, i) => ({
-            scenario_id: defaultScenarioId,
-            month: i + 1,
-            budget: 10000,
-            salesBudget: 20000,
-            productionBudget: 12000,
-            logisticsBudget: 2000,
-        }));
-        insertManyFin(finData);
-
-        // Seed Logistics Plan
-        const insertLog = db.prepare("INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES (@scenario_id, @initialInventory, @maxCapacity, @fixedCost, @overflowCost)");
-        insertLog.run({
-            scenario_id: defaultScenarioId,
-            initialInventory: 100,
-            maxCapacity: 300,
-            fixedCost: 1000,
-            overflowCost: 20,
-        });
+        await client.query("COMMIT");
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
     }
 };
 
+// Seed Data if empty
+const seedData = async () => {
+    try {
+        await initDb();
+
+        const res = await query("SELECT COUNT(*) as count FROM scenarios");
+        const scenarioCount = parseInt(res.rows[0].count);
+
+        if (scenarioCount === 0) {
+            // Create Default Scenario
+            const insertScenario = await query("INSERT INTO scenarios (name) VALUES ($1) RETURNING id", ["Base Plan"]);
+            const defaultScenarioId = insertScenario.rows[0].id;
+
+            // Seed Sales Plan
+            const salesData = Array.from({ length: 12 }, (_, i) => ({
+                scenario_id: defaultScenarioId,
+                month: i + 1,
+                quantity: (i >= 3 && i <= 7) ? 50 : 200, // Summer slump (M4-M8)
+                price: 100,
+            }));
+            for (const row of salesData) {
+                await query(
+                    "INSERT INTO sales_plan (scenario_id, month, quantity, price) VALUES ($1, $2, $3, $4)",
+                    [row.scenario_id, row.month, row.quantity, row.price]
+                );
+            }
+
+            // Seed Production Plan
+            const prodData = Array.from({ length: 12 }, (_, i) => ({
+                scenario_id: defaultScenarioId,
+                month: i + 1,
+                quantity: 200,
+                cost: 60,
+            }));
+            for (const row of prodData) {
+                await query(
+                    "INSERT INTO production_plan (scenario_id, month, quantity, cost) VALUES ($1, $2, $3, $4)",
+                    [row.scenario_id, row.month, row.quantity, row.cost]
+                );
+            }
+
+            // Seed Financial Plan
+            const finData = Array.from({ length: 12 }, (_, i) => ({
+                scenario_id: defaultScenarioId,
+                month: i + 1,
+                budget: 10000,
+                salesBudget: 20000,
+                productionBudget: 12000,
+                logisticsBudget: 2000,
+            }));
+            for (const row of finData) {
+                await query(
+                    "INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES ($1, $2, $3, $4, $5, $6)",
+                    [row.scenario_id, row.month, row.budget, row.salesBudget, row.productionBudget, row.logisticsBudget]
+                );
+            }
+
+            // Seed Logistics Plan
+            await query(
+                "INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES ($1, $2, $3, $4, $5)",
+                [defaultScenarioId, 100, 300, 1000, 20]
+            );
+        }
+    } catch (error) {
+        console.error("Seeding error:", error);
+    }
+};
+
+// Initialize DB on module load (might be risky in serverless, but okay for long-running container)
+// For Next.js API routes, it's better to call this lazily or ensure it handles concurrency.
+// We'll call it once.
 seedData();
 
-export const getScenarios = () => {
-    return db.prepare("SELECT * FROM scenarios").all();
+export const getScenarios = async () => {
+    const res = await query("SELECT * FROM scenarios");
+    return res.rows;
 };
 
-export const createScenario = (name) => {
-    const stmt = db.prepare("INSERT INTO scenarios (name) VALUES (?)");
-    const info = stmt.run(name);
-    return { id: info.lastInsertRowid, name };
+export const createScenario = async (name) => {
+    const res = await query("INSERT INTO scenarios (name) VALUES ($1) RETURNING *", [name]);
+    return res.rows[0];
 };
 
-// Clone a scenario (copy all data from sourceId to new scenario)
-export const cloneScenario = (sourceId, newName) => {
-    const newScenario = createScenario(newName);
-    const targetId = newScenario.id;
+export const cloneScenario = async (sourceId, newName) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
 
-    const copySales = db.prepare(`
-        INSERT INTO sales_plan (scenario_id, month, quantity, price)
-        SELECT ?, month, quantity, price FROM sales_plan WHERE scenario_id = ?
-    `);
+        const newScenarioRes = await client.query("INSERT INTO scenarios (name) VALUES ($1) RETURNING *", [newName]);
+        const newScenario = newScenarioRes.rows[0];
+        const targetId = newScenario.id;
 
-    const copyProd = db.prepare(`
-        INSERT INTO production_plan (scenario_id, month, quantity, cost)
-        SELECT ?, month, quantity, cost FROM production_plan WHERE scenario_id = ?
-    `);
+        await client.query(`
+            INSERT INTO sales_plan(scenario_id, month, quantity, price)
+            SELECT $1::INTEGER, month, quantity, price FROM sales_plan WHERE scenario_id = $2::INTEGER
+    `, [targetId, sourceId]);
 
-    const copyFin = db.prepare(`
-        INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget)
-        SELECT ?, month, budget, salesBudget, productionBudget, logisticsBudget FROM financial_plan WHERE scenario_id = ?
-    `);
+        await client.query(`
+            INSERT INTO production_plan(scenario_id, month, quantity, cost)
+            SELECT $1::INTEGER, month, quantity, cost FROM production_plan WHERE scenario_id = $2::INTEGER
+    `, [targetId, sourceId]);
 
-    const copyLog = db.prepare(`
-        INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost)
-        SELECT ?, initialInventory, maxCapacity, fixedCost, overflowCost FROM logistics_plan WHERE scenario_id = ?
-    `);
+        await client.query(`
+            INSERT INTO financial_plan(scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget)
+            SELECT $1::INTEGER, month, budget, salesBudget, productionBudget, logisticsBudget FROM financial_plan WHERE scenario_id = $2::INTEGER
+    `, [targetId, sourceId]);
 
-    const transaction = db.transaction(() => {
-        copySales.run(targetId, sourceId);
-        copyProd.run(targetId, sourceId);
-        copyFin.run(targetId, sourceId);
-        copyLog.run(targetId, sourceId);
-    });
+        await client.query(`
+            INSERT INTO logistics_plan(scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost)
+            SELECT $1::INTEGER, initialInventory, maxCapacity, fixedCost, overflowCost FROM logistics_plan WHERE scenario_id = $2::INTEGER
+    `, [targetId, sourceId]);
 
-    transaction();
-    return newScenario;
+        await client.query("COMMIT");
+        return newScenario;
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 };
 
-export const getSalesPlan = (scenarioId) => {
-    const stmt = db.prepare("SELECT * FROM sales_plan WHERE scenario_id = ? ORDER BY month");
-    return stmt.all(scenarioId);
+export const getSalesPlan = async (scenarioId) => {
+    const res = await query("SELECT * FROM sales_plan WHERE scenario_id = $1 ORDER BY month", [scenarioId]);
+    return res.rows;
 };
 
-export const saveSalesPlan = (scenarioId, plan) => {
-    // Delete existing for this scenario and month to avoid duplicates or complex upserts with ID
-    // Or better: use INSERT OR REPLACE if we had a unique constraint on (scenario_id, month).
-    // Let's add a unique index or just delete and re-insert for simplicity in this MVP.
-    // Actually, let's use a transaction to delete and insert.
+export const saveSalesPlan = async (scenarioId, plan) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        // Delete existing for this scenario
+        // Optimization: Delete all and re-insert is simplest for MVP
+        // But to avoid deleting everything if we only send partial updates...
+        // The frontend sends the whole plan.
 
-    const deleteStmt = db.prepare("DELETE FROM sales_plan WHERE scenario_id = ? AND month = ?");
-    const insertStmt = db.prepare("INSERT INTO sales_plan (scenario_id, month, quantity, price) VALUES (@scenario_id, @month, @quantity, @price)");
+        // We can't easily delete *all* for the scenario if we want to support partial updates, 
+        // but here we assume 'plan' contains the full 12 months or the relevant months.
+        // Let's delete by (scenario_id, month) for each item to be safe.
 
-    const saveTransaction = db.transaction((planItems) => {
-        for (const row of planItems) {
-            deleteStmt.run(scenarioId, row.month);
-            insertStmt.run({ ...row, scenario_id: scenarioId });
+        for (const row of plan) {
+            await client.query("DELETE FROM sales_plan WHERE scenario_id = $1 AND month = $2", [scenarioId, row.month]);
+            await client.query(
+                "INSERT INTO sales_plan (scenario_id, month, quantity, price) VALUES ($1, $2, $3, $4)",
+                [scenarioId, row.month, row.quantity, row.price]
+            );
         }
-    });
-
-    saveTransaction(plan);
+        await client.query("COMMIT");
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 };
 
-export const getProductionPlan = (scenarioId) => {
-    const stmt = db.prepare("SELECT * FROM production_plan WHERE scenario_id = ? ORDER BY month");
-    return stmt.all(scenarioId);
+export const getProductionPlan = async (scenarioId) => {
+    const res = await query("SELECT * FROM production_plan WHERE scenario_id = $1 ORDER BY month", [scenarioId]);
+    return res.rows;
 };
 
-export const saveProductionPlan = (scenarioId, plan) => {
-    const deleteStmt = db.prepare("DELETE FROM production_plan WHERE scenario_id = ? AND month = ?");
-    const insertStmt = db.prepare("INSERT INTO production_plan (scenario_id, month, quantity, cost) VALUES (@scenario_id, @month, @quantity, @cost)");
-
-    const saveTransaction = db.transaction((planItems) => {
-        for (const row of planItems) {
-            deleteStmt.run(scenarioId, row.month);
-            insertStmt.run({ ...row, scenario_id: scenarioId });
+export const saveProductionPlan = async (scenarioId, plan) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        for (const row of plan) {
+            await client.query("DELETE FROM production_plan WHERE scenario_id = $1 AND month = $2", [scenarioId, row.month]);
+            await client.query(
+                "INSERT INTO production_plan (scenario_id, month, quantity, cost) VALUES ($1, $2, $3, $4)",
+                [scenarioId, row.month, row.quantity, row.cost]
+            );
         }
-    });
-
-    saveTransaction(plan);
+        await client.query("COMMIT");
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 };
 
-export const getFinancialPlan = (scenarioId) => {
-    const stmt = db.prepare("SELECT * FROM financial_plan WHERE scenario_id = ? ORDER BY month");
-    return stmt.all(scenarioId);
+export const getFinancialPlan = async (scenarioId) => {
+    const res = await query("SELECT * FROM financial_plan WHERE scenario_id = $1 ORDER BY month", [scenarioId]);
+    return res.rows;
 };
 
-export const saveFinancialPlan = (scenarioId, plan) => {
-    const deleteStmt = db.prepare("DELETE FROM financial_plan WHERE scenario_id = ? AND month = ?");
-    const insertStmt = db.prepare("INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES (@scenario_id, @month, @budget, @salesBudget, @productionBudget, @logisticsBudget)");
-
-    const saveTransaction = db.transaction((planItems) => {
-        for (const row of planItems) {
-            deleteStmt.run(scenarioId, row.month);
-            insertStmt.run({ ...row, scenario_id: scenarioId });
+export const saveFinancialPlan = async (scenarioId, plan) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        for (const row of plan) {
+            await client.query("DELETE FROM financial_plan WHERE scenario_id = $1 AND month = $2", [scenarioId, row.month]);
+            await client.query(
+                "INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES ($1, $2, $3, $4, $5, $6)",
+                [scenarioId, row.month, row.budget, row.salesBudget, row.productionBudget, row.logisticsBudget]
+            );
         }
-    });
-
-    saveTransaction(plan);
+        await client.query("COMMIT");
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 };
 
-export const getLogisticsPlan = (scenarioId) => {
-    const stmt = db.prepare("SELECT * FROM logistics_plan WHERE scenario_id = ?");
-    return stmt.get(scenarioId);
+export const getLogisticsPlan = async (scenarioId) => {
+    const res = await query("SELECT * FROM logistics_plan WHERE scenario_id = $1", [scenarioId]);
+    return res.rows[0];
 };
 
-export const saveLogisticsPlan = (scenarioId, plan) => {
-    // Logistics plan is usually single row per scenario
-    const deleteStmt = db.prepare("DELETE FROM logistics_plan WHERE scenario_id = ?");
-    const insertStmt = db.prepare("INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES (@scenario_id, @initialInventory, @maxCapacity, @fixedCost, @overflowCost)");
-
-    const saveTransaction = db.transaction(() => {
-        deleteStmt.run(scenarioId);
-        insertStmt.run({ ...plan, scenario_id: scenarioId });
-    });
-
-    saveTransaction();
+export const saveLogisticsPlan = async (scenarioId, plan) => {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        await client.query("DELETE FROM logistics_plan WHERE scenario_id = $1", [scenarioId]);
+        await client.query(
+            "INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES ($1, $2, $3, $4, $5)",
+            [scenarioId, plan.initialInventory, plan.maxCapacity, plan.fixedCost, plan.overflowCost]
+        );
+        await client.query("COMMIT");
+    } catch (e) {
+        await client.query("ROLLBACK");
+        throw e;
+    } finally {
+        client.release();
+    }
 };

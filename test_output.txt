@@ -1,0 +1,66 @@
+
+> sandopmvp@0.1.0 test
+> jest src/__tests__/scenarios.test.js
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/__tests__/scenarios.test.js
+  Scenario Management
+    竏・should create a new scenario (128 ms)
+    竏・should isolate data between scenarios (98 ms)
+    ﾃ・should clone a scenario correctly (91 ms)
+
+  笳・Scenario Management 窶ｺ should clone a scenario correctly
+
+    column "scenario_id" is of type integer but expression is of type text
+
+    頗 This seems to be an execution error, which means that your request syntax seems okay,
+        but the resulting statement cannot be executed 竊・Probably not a pg-mem error.
+
+    *・鞘Ε Failed SQL statement: 
+                INSERT INTO sales_plan(scenario_id, month, quantity, price)
+                SELECT '6', month, quantity, price FROM sales_plan WHERE scenario_id = '5'
+        ;
+
+    痩 You can file an issue at https://github.com/oguimbal/pg-mem along with a way to reproduce this error (if you can), and  the stacktrace:
+
+      169 |         const targetId = newScenario.id;
+      170 |
+    > 171 |         await client.query(`
+          |                      ^
+      172 |             INSERT INTO sales_plan(scenario_id, month, quantity, price)
+      173 |             SELECT $1, month, quantity, price FROM sales_plan WHERE scenario_id = $2
+      174 |     `, [targetId, sourceId]);
+
+      at node_modules/pg-mem/src/execution/records-mutations/insert.ts:59:23
+          at Array.map (<anonymous>)
+      at Insert.visit (node_modules/pg-mem/src/execution/records-mutations/insert.ts:51:56)
+      at node_modules/pg-mem/src/execution/records-mutations/insert.ts:37:40
+      at StackOf.usingValue (node_modules/pg-mem/src/parser/context.ts:11:20)
+      at new Insert (node_modules/pg-mem/src/execution/records-mutations/insert.ts:37:22)
+      at buildWithable (node_modules/pg-mem/src/execution/select.ts:40:20)
+      at new SelectExec (node_modules/pg-mem/src/execution/select.ts:269:67)
+      at StatementExec._getExecutor (node_modules/pg-mem/src/execution/statement-exec.ts:83:24)
+      at node_modules/pg-mem/src/execution/statement-exec.ts:185:52
+      at StackOf.usingValue (node_modules/pg-mem/src/parser/context.ts:11:20)
+      at node_modules/pg-mem/src/execution/statement-exec.ts:184:40
+      at StackOf.usingValue (node_modules/pg-mem/src/parser/context.ts:11:20)
+      at node_modules/pg-mem/src/execution/statement-exec.ts:183:36
+      at StackOf.usingValue (node_modules/pg-mem/src/parser/context.ts:11:20)
+      at node_modules/pg-mem/src/execution/statement-exec.ts:182:29
+      at StatementExec.niceErrors (node_modules/pg-mem/src/execution/statement-exec.ts:226:20)
+      at StatementExec.compile (node_modules/pg-mem/src/execution/statement-exec.ts:158:21)
+      at node_modules/pg-mem/src/schema/prepared.ts:176:64
+      at StackOf.usingValue (node_modules/pg-mem/src/parser/context.ts:11:20)
+      at new PreparedQuery (node_modules/pg-mem/src/schema/prepared.ts:176:44)
+      at prepareQuery (node_modules/pg-mem/src/schema/prepared.ts:95:11)
+      at DbSchema.prepare (node_modules/pg-mem/src/schema/schema.ts:90:37)
+      at DbSchema.query (node_modules/pg-mem/src/schema/schema.ts:63:21)
+      at MemPg.query (node_modules/pg-mem/src/adapters/adapters.ts:89:76)
+      at query (src/lib/db.js:171:22)
+      at Object.<anonymous> (src/__tests__/scenarios.test.js:72:23)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 2 passed, 3 total
+Snapshots:   0 total
+Time:        2.516 s
+Ran all test suites matching src/__tests__/scenarios.test.js.

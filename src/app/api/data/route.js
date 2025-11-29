@@ -20,7 +20,7 @@ export async function GET(request) {
         const scenarioId = searchParams.get("scenarioId");
 
         if (action === "scenarios") {
-            const scenarios = getScenarios();
+            const scenarios = await getScenarios();
             return NextResponse.json({ scenarios });
         }
 
@@ -28,10 +28,10 @@ export async function GET(request) {
             return NextResponse.json({ error: "Scenario ID is required" }, { status: 400 });
         }
 
-        const salesPlan = getSalesPlan(scenarioId);
-        const productionPlan = getProductionPlan(scenarioId);
-        const financialPlan = getFinancialPlan(scenarioId);
-        const logisticsPlan = getLogisticsPlan(scenarioId);
+        const salesPlan = await getSalesPlan(scenarioId);
+        const productionPlan = await getProductionPlan(scenarioId);
+        const financialPlan = await getFinancialPlan(scenarioId);
+        const logisticsPlan = await getLogisticsPlan(scenarioId);
 
         return NextResponse.json({
             salesPlan,
@@ -51,12 +51,12 @@ export async function POST(request) {
         const { action, scenarioId, name, sourceId, salesPlan, productionPlan, financialPlan, logisticsPlan } = body;
 
         if (action === "create") {
-            const newScenario = createScenario(name);
+            const newScenario = await createScenario(name);
             return NextResponse.json({ scenario: newScenario });
         }
 
         if (action === "clone") {
-            const newScenario = cloneScenario(sourceId, name);
+            const newScenario = await cloneScenario(sourceId, name);
             return NextResponse.json({ scenario: newScenario });
         }
 
@@ -64,10 +64,10 @@ export async function POST(request) {
             return NextResponse.json({ error: "Scenario ID is required for saving plans" }, { status: 400 });
         }
 
-        if (salesPlan) saveSalesPlan(scenarioId, salesPlan);
-        if (productionPlan) saveProductionPlan(scenarioId, productionPlan);
-        if (financialPlan) saveFinancialPlan(scenarioId, financialPlan);
-        if (logisticsPlan) saveLogisticsPlan(scenarioId, logisticsPlan);
+        if (salesPlan) await saveSalesPlan(scenarioId, salesPlan);
+        if (productionPlan) await saveProductionPlan(scenarioId, productionPlan);
+        if (financialPlan) await saveFinancialPlan(scenarioId, financialPlan);
+        if (logisticsPlan) await saveLogisticsPlan(scenarioId, logisticsPlan);
 
         return NextResponse.json({ success: true });
     } catch (error) {
