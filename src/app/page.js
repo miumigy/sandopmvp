@@ -22,6 +22,11 @@ import styles from "./page.module.css";
 export default function Dashboard() {
   const { salesPlan, productionPlan, psiResults, aiProposals, logisticsPlan, financialPlan } = useSOP();
 
+  // Number formatter for charts
+  const formatNumber = (value) => {
+    return typeof value === 'number' ? value.toLocaleString() : value;
+  };
+
   // Prepare data for charts
   const chartData = salesPlan.map((sale, index) => ({
     month: `M${sale.month}`,
@@ -81,7 +86,7 @@ export default function Dashboard() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip />
+              <Tooltip formatter={formatNumber} />
               <Legend />
               <Bar dataKey="sales" fill="#0070f3" name="Sales" />
               <Bar dataKey="production" fill="#10b981" name="Production" />
@@ -98,7 +103,7 @@ export default function Dashboard() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip />
+              <Tooltip formatter={formatNumber} />
               <Legend />
               <Line type="monotone" dataKey="salesAmount" stroke="#0070f3" strokeWidth={2} name="Actual Sales ($)" />
               <Line type="monotone" dataKey="salesBudget" stroke="#94a3b8" strokeDasharray="5 5" name="Budget ($)" />
@@ -114,7 +119,7 @@ export default function Dashboard() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip />
+              <Tooltip formatter={formatNumber} />
               <Legend />
               <Bar dataKey="loss" fill="#ef4444" name="Lost Sales (Qty)" />
             </BarChart>
