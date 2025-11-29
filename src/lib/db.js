@@ -77,19 +77,26 @@ const initDb = async () => {
 };
 
 // Seed Data if empty
+// Seed Data if empty
 const seedData = async () => {
     try {
         await initDb();
 
-        const res = await query("SELECT COUNT(*) as count FROM scenarios");
-        const scenarioCount = parseInt(res.rows[0].count);
+        // Check for Base Plan
+        const scenarioRes = await query("SELECT id FROM scenarios WHERE name = $1", ["Base Plan"]);
+        let defaultScenarioId;
 
-        if (scenarioCount === 0) {
-            // Create Default Scenario
+        if (scenarioRes.rows.length === 0) {
+            // Create Default Scenario if not exists
             const insertScenario = await query("INSERT INTO scenarios (name) VALUES ($1) RETURNING id", ["Base Plan"]);
-            const defaultScenarioId = insertScenario.rows[0].id;
+            defaultScenarioId = insertScenario.rows[0].id;
+        } else {
+            defaultScenarioId = scenarioRes.rows[0].id;
+        }
 
-            // Seed Sales Plan
+        // Seed Sales Plan
+        const salesCount = await query("SELECT COUNT(*) as count FROM sales_plan WHERE scenario_id = $1", [defaultScenarioId]);
+        if (parseInt(salesCount.rows[0].count) === 0) {
             const salesData = Array.from({ length: 12 }, (_, i) => ({
                 scenario_id: defaultScenarioId,
                 month: i + 1,
@@ -102,8 +109,11 @@ const seedData = async () => {
                     [row.scenario_id, row.month, row.quantity, row.price]
                 );
             }
+        }
 
-            // Seed Production Plan
+        // Seed Production Plan
+        const prodCount = await query("SELECT COUNT(*) as count FROM production_plan WHERE scenario_id = $1", [defaultScenarioId]);
+        if (parseInt(prodCount.rows[0].count) === 0) {
             const prodData = Array.from({ length: 12 }, (_, i) => ({
                 scenario_id: defaultScenarioId,
                 month: i + 1,
@@ -116,8 +126,11 @@ const seedData = async () => {
                     [row.scenario_id, row.month, row.quantity, row.cost]
                 );
             }
+        }
 
-            // Seed Financial Plan
+        // Seed Financial Plan
+        const finCount = await query("SELECT COUNT(*) as count FROM financial_plan WHERE scenario_id = $1", [defaultScenarioId]);
+        if (parseInt(finCount.rows[0].count) === 0) {
             const finData = Array.from({ length: 12 }, (_, i) => ({
                 scenario_id: defaultScenarioId,
                 month: i + 1,
@@ -132,8 +145,11 @@ const seedData = async () => {
                     [row.scenario_id, row.month, row.budget, row.salesBudget, row.productionBudget, row.logisticsBudget]
                 );
             }
+        }
 
-            // Seed Logistics Plan
+        // Seed Logistics Plan
+        const logCount = await query("SELECT COUNT(*) as count FROM logistics_plan WHERE scenario_id = $1", [defaultScenarioId]);
+        if (parseInt(logCount.rows[0].count) === 0) {
             await query(
                 "INSERT INTO logistics_plan (scenario_id, initialInventory, maxCapacity, fixedCost, overflowCost) VALUES ($1, $2, $3, $4, $5)",
                 [defaultScenarioId, 100, 300, 1000, 20]
