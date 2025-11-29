@@ -1,0 +1,84 @@
+name: Keep Render Awake (curl)
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # 5分おきに起動し、ジョブ内で毎分ping（1分x6回）
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: (curl)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    concurrency:
+      group: keepalive-curl
+      cancel-in-progress: false
+    steps:
+      - name: Resolve target URL
+        id: resolve
+        env:
+          # 優先順位: repo secrets -> repo vars（どちらも未設定なら空）
+          S1: ${{ secrets.RENDER_PING_URL }}
+          S2: ${{ secrets.RENDER_SERVICE_URL }}
+          V1: ${{ vars.RENDER_PING_URL }}
+          V2: ${{ vars.RENDER_SERVICE_URL }}
+          # 最終フォールバック（未設定時にこのURLへアクセス）
+          D1: https://scpln-web.onrender.com
+        run: |
+          set -euo pipefail
+          URL="${S1:-}"
+          [ -z "$URL" ] && URL="${S2:-}"
+          [ -z "$URL" ] && URL="${V1:-}"
+          [ -z "$URL" ] && URL="${V2:-}"
+          [ -z "$URL" ] && URL="${D1:-}"
+          if [ -z "$URL" ]; then
+            echo "::warning::RENDER_PING_URL/RENDER_SERVICE_URL が未設定のためスキップします。" \
+              && echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            # 末尾スラッシュは除去（/healthzの結合を安定化）
+            URL="${URL%/}"
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "base_url=$URL" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Keep alive loop (1min x 20)
+        if: steps.resolve.outputs.configured == 'true'
+        env:
+          BASE_URL: ${{ steps.resolve.outputs.base_url }}
+        run: |
+          set -euo pipefail
+          echo "Target: $BASE_URL"
+          DATE_BIN="$(command -v date || echo /bin/date)"
+          SLEEP_BIN="$(command -v sleep || echo /bin/sleep)"
+          CURL_BIN="$(command -v curl || echo /usr/bin/curl)"
+          echo "Using bins: date=${DATE_BIN} sleep=${SLEEP_BIN} curl=${CURL_BIN}"
+          for i in $(seq 1 20); do
+            TS=$($DATE_BIN +%s)
+            for PATH in "/healthz" "/"; do
+              # クエリでキャッシュ回避
+              URL="${BASE_URL%/}${PATH}?_keepalive=${TS}"
+              echo "[$($DATE_BIN -u +%FT%TZ)] GET ${URL}"
+              HTTP_CODE=$($CURL_BIN -sS -o /dev/null -w "%{http_code}" \
+                --max-time 20 \
+                --retry 2 --retry-delay 2 --retry-all-errors \
+                -H 'Cache-Control: no-cache' \
+                -A 'GitHubActionsKeepAlive/1.1' \
+                "${URL}" || echo "000")
+              echo "HTTP ${HTTP_CODE} for ${URL}"
+              # いずれの応答でも1回は到達と見なす
+              if [ "${HTTP_CODE}" != "000" ]; then
+                break
+              fi
+            done
+            # 最終回以外は60秒待機
+            if [ "$i" -lt 20 ]; then $SLEEP_BIN 60; fi
+          done
+          echo "Keep-alive loop completed."
+
+      - name: Summary
+        run: |
+          echo "Keep-aliveジョブ完了。URL設定の有無に応じてHTTPリクエストを送信しました。"
