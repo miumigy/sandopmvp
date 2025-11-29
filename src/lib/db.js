@@ -12,15 +12,34 @@ if (USE_SQLITE) {
 
     // Wrapper to make SQLite queries async-compatible
     query = async (text, params = []) => {
-        const stmt = db.prepare(text);
-        const isSelect = text.trim().toUpperCase().startsWith('SELECT');
-        const isReturning = text.toUpperCase().includes('RETURNING');
+        // Convert PostgreSQL placeholders ($1, $2, etc.) to SQLite placeholders (?)
+        let sqliteQuery = text.replace(/\$(\d+)/g, '?');
 
-        if (isSelect || isReturning) {
+        // Handle RETURNING clause (SQLite doesn't support it in the same way)
+        const hasReturning = text.toUpperCase().includes('RETURNING');
+        if (hasReturning) {
+            // Remove RETURNING clause for SQLite
+            sqliteQuery = sqliteQuery.replace(/RETURNING\s+\*/gi, '');
+        }
+
+        const stmt = db.prepare(sqliteQuery);
+        const isSelect = text.trim().toUpperCase().startsWith('SELECT');
+
+        if (isSelect) {
             const rows = stmt.all(...params);
             return { rows };
         } else {
             const result = stmt.run(...params);
+            // For INSERT with RETURNING, return the inserted row
+            if (hasReturning) {
+                const lastId = result.lastInsertRowid;
+                // Get the inserted row
+                const tableName = text.match(/INSERT\s+INTO\s+(\w+)/i)?.[1];
+                if (tableName && lastId) {
+                    const row = db.prepare(`SELECT * FROM ${tableName} WHERE id = ?`).get(lastId);
+                    return { rows: [row] };
+                }
+            }
             return { rows: [] };
         }
     };
