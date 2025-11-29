@@ -77,21 +77,38 @@ graph TD
     end
 
     subgraph Database
-        SQLite[(SQLite DB)]
+        DB[(SQLite / PostgreSQL)]
     end
 
     Dashboard --> Context
     Inputs --> Context
     Context -- Fetch/Save Data --> API
     API --> Logic
-    Logic --> SQLite
-    SQLite --> Logic
+    Logic --> DB
+    DB --> Logic
     Logic --> API
 ```
+
+## Database Configuration
+
+This application supports a dual database configuration:
+
+*   **Local Development**: Uses **SQLite** (`better-sqlite3`) by default. No setup required.
+*   **Production**: Uses **PostgreSQL** (e.g., Render, Supabase) when `DATABASE_URL` is configured.
+
+### Environment Variables
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | PostgreSQL Connection String (Production) | `undefined` (uses SQLite) |
+| `DB_FILENAME` | SQLite database filename (Local) | `sop_local.db` |
 
 ## Tech Stack
 
 *   **Frontend**: Next.js (App Router), React, Recharts, Lucide React
 *   **Styling**: Vanilla CSS (CSS Modules)
-*   **Backend/DB**: Next.js API Routes, SQLite (better-sqlite3)
+*   **Backend**: Next.js API Routes
+*   **Database**:
+    *   **Local**: SQLite (better-sqlite3)
+    *   **Production**: PostgreSQL (pg)
 *   **Testing**: Jest, React Testing Library
