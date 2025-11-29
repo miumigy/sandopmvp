@@ -50,9 +50,9 @@ const initDb = async () => {
     scenario_id INTEGER REFERENCES scenarios(id),
     month INTEGER,
     budget DECIMAL,
-    salesBudget DECIMAL,
-    productionBudget DECIMAL,
-    logisticsBudget DECIMAL
+    salesbudget DECIMAL,
+    productionbudget DECIMAL,
+    logisticsbudget DECIMAL
 );
 `);
 
@@ -135,14 +135,14 @@ const seedData = async () => {
                 scenario_id: defaultScenarioId,
                 month: i + 1,
                 budget: 10000,
-                salesBudget: 20000,
-                productionBudget: 12000,
-                logisticsBudget: 2000,
+                salesbudget: 20000,
+                productionbudget: 12000,
+                logisticsbudget: 2000,
             }));
             for (const row of finData) {
                 await query(
-                    "INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES ($1, $2, $3, $4, $5, $6)",
-                    [row.scenario_id, row.month, row.budget, row.salesBudget, row.productionBudget, row.logisticsBudget]
+                    "INSERT INTO financial_plan (scenario_id, month, budget, salesbudget, productionbudget, logisticsbudget) VALUES ($1, $2, $3, $4, $5, $6)",
+                    [row.scenario_id, row.month, row.budget, row.salesbudget, row.productionbudget, row.logisticsbudget]
                 );
             }
         }
@@ -195,8 +195,8 @@ export const cloneScenario = async (sourceId, newName) => {
     `, [targetId, sourceId]);
 
         await client.query(`
-            INSERT INTO financial_plan(scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget)
-            SELECT $1::INTEGER, month, budget, salesBudget, productionBudget, logisticsBudget FROM financial_plan WHERE scenario_id = $2::INTEGER
+            INSERT INTO financial_plan(scenario_id, month, budget, salesbudget, productionbudget, logisticsbudget)
+            SELECT $1::INTEGER, month, budget, salesbudget, productionbudget, logisticsbudget FROM financial_plan WHERE scenario_id = $2::INTEGER
     `, [targetId, sourceId]);
 
         await client.query(`
@@ -285,8 +285,8 @@ export const saveFinancialPlan = async (scenarioId, plan) => {
         for (const row of plan) {
             await client.query("DELETE FROM financial_plan WHERE scenario_id = $1 AND month = $2", [scenarioId, row.month]);
             await client.query(
-                "INSERT INTO financial_plan (scenario_id, month, budget, salesBudget, productionBudget, logisticsBudget) VALUES ($1, $2, $3, $4, $5, $6)",
-                [scenarioId, row.month, row.budget, row.salesBudget, row.productionBudget, row.logisticsBudget]
+                "INSERT INTO financial_plan (scenario_id, month, budget, salesbudget, productionbudget, logisticsbudget) VALUES ($1, $2, $3, $4, $5, $6)",
+                [scenarioId, row.month, row.budget, row.salesbudget, row.productionbudget, row.logisticsbudget]
             );
         }
         await client.query("COMMIT");

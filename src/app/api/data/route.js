@@ -30,8 +30,16 @@ export async function GET(request) {
 
         const salesPlan = await getSalesPlan(scenarioId);
         const productionPlan = await getProductionPlan(scenarioId);
-        const financialPlan = await getFinancialPlan(scenarioId);
+        const financialPlanRaw = await getFinancialPlan(scenarioId);
         const logisticsPlan = await getLogisticsPlan(scenarioId);
+
+        // Transform financial plan from DB lowercase to frontend camelCase
+        const financialPlan = financialPlanRaw.map(row => ({
+            ...row,
+            salesBudget: row.salesbudget,
+            productionBudget: row.productionbudget,
+            logisticsBudget: row.logisticsbudget
+        }));
 
         return NextResponse.json({
             salesPlan,
@@ -66,7 +74,16 @@ export async function POST(request) {
 
         if (salesPlan) await saveSalesPlan(scenarioId, salesPlan);
         if (productionPlan) await saveProductionPlan(scenarioId, productionPlan);
-        if (financialPlan) await saveFinancialPlan(scenarioId, financialPlan);
+        if (financialPlan) {
+            // Transform from frontend camelCase to DB lowercase
+            const financialPlanDb = financialPlan.map(row => ({
+                ...row,
+                salesbudget: row.salesBudget,
+                productionbudget: row.productionBudget,
+                logisticsbudget: row.logisticsBudget
+            }));
+            await saveFinancialPlan(scenarioId, financialPlanDb);
+        }
         if (logisticsPlan) await saveLogisticsPlan(scenarioId, logisticsPlan);
 
         return NextResponse.json({ success: true });
