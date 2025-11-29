@@ -86,7 +86,7 @@ export default function Dashboard() {
               <Bar dataKey="sales" fill="#0070f3" name="Sales" />
               <Bar dataKey="production" fill="#10b981" name="Production" />
               <Line type="monotone" dataKey="inventory" stroke="#f59e0b" strokeWidth={2} name="Inventory" />
-              <ReferenceLine y={logisticsPlan.maxCapacity} label="Max Cap" stroke="red" strokeDasharray="3 3" />
+              <ReferenceLine y={Number(logisticsPlan?.maxCapacity || 0)} label="Max Cap" stroke="red" strokeDasharray="3 3" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
