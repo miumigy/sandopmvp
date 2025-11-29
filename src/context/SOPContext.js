@@ -82,6 +82,12 @@ export const SOPProvider = ({ children }) => {
                 else setFinancialPlan(initialMonths);
 
                 if (data.logisticsPlan) setLogisticsPlan(data.logisticsPlan);
+                else setLogisticsPlan({
+                    initialInventory: 100,
+                    maxCapacity: 1000,
+                    fixedCost: 5000,
+                    overflowCost: 10,
+                });
             } catch (error) {
                 console.error("Failed to fetch data:", error);
             }
