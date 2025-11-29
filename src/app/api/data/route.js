@@ -60,10 +60,10 @@ export async function GET(request) {
         if (logisticsPlanRaw) {
             logisticsPlan = {
                 ...logisticsPlanRaw,
-                initialInventory: logisticsPlanRaw.initialinventory ?? logisticsPlanRaw.initialInventory,
-                maxCapacity: logisticsPlanRaw.maxcapacity ?? logisticsPlanRaw.maxCapacity,
-                fixedCost: logisticsPlanRaw.fixedcost ?? logisticsPlanRaw.fixedCost,
-                overflowCost: logisticsPlanRaw.overflowcost ?? logisticsPlanRaw.overflowCost
+                initialInventory: Number(logisticsPlanRaw.initialinventory ?? logisticsPlanRaw.initialInventory),
+                maxCapacity: Number(logisticsPlanRaw.maxcapacity ?? logisticsPlanRaw.maxCapacity),
+                fixedCost: Number(logisticsPlanRaw.fixedcost ?? logisticsPlanRaw.fixedCost),
+                overflowCost: Number(logisticsPlanRaw.overflowcost ?? logisticsPlanRaw.overflowCost)
             };
         }
 
