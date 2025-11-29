@@ -38,6 +38,46 @@
     color: var(--foreground);
 }
 
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-left: 4px solid transparent;
+}
+
+.blue {
+    border-left-color: var(--primary);
+}
+
+.green {
+    border-left-color: #10b981;
+}
+
+.red {
+    border-left-color: #ef4444;
+}
+
+.yellow {
+    border-left-color: #f59e0b;
+}
+
+.title {
+    font-size: 0.875rem;
+    color: #666;
+    font-weight: 500;
+    margin: 0;
+}
+
+.value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--foreground);
+}
+
 .unit {
     font-size: 1rem;
     color: #888;
@@ -47,4 +87,27 @@
 .trend {
     font-size: 0.875rem;
     color: #666;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+    .card {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 0.8rem;
+    }
+
+    .value {
+        font-size: 1.5rem;
+    }
+
+    .unit {
+        font-size: 0.9rem;
+    }
+
+    .trend {
+        font-size: 0.8rem;
+    }
 }

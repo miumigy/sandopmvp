@@ -88,3 +88,53 @@
   color: #64748b;
   font-style: italic;
 }
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding-bottom: 1rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chartCard {
+    padding: 1rem;
+  }
+
+  .chartCard h3 {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .aiSection {
+    padding: 1rem;
+  }
+
+  .aiSection h2 {
+    font-size: 1.1rem;
+  }
+
+  .proposalCard {
+    padding: 0.75rem;
+  }
+
+  .proposalHeader {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

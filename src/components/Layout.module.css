@@ -91,3 +91,55 @@
 .saveButton:hover {
     background: #0060df;
 }
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 0.75rem;
+    }
+
+    .logo {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .nav {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 0.25rem;
+    }
+
+    .navItem {
+        padding: 0.5rem 0.75rem;
+        white-space: nowrap;
+        font-size: 0.875rem;
+    }
+
+    .header {
+        height: auto;
+        min-height: 56px;
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .title {
+        font-size: 1.1rem;
+    }
+
+    .content {
+        padding: 1rem;
+    }
+
+    .saveButton {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
