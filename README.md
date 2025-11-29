@@ -5,12 +5,13 @@ This application is a Minimum Viable Product (MVP) for Sales and Operations Plan
 ## Features
 
 *   **Dashboard**: Visualization of PSI (Production, Sales, Inventory), Opportunity Loss, AI Proposals, and Financial Performance (Budget vs Actual).
+*   **Scenario Management**: Create and switch between multiple S&OP scenarios for What-If analysis.
 *   **Sales Plan**: Monthly sales quantity and price input (Spreadsheet-like UI, Copy-Paste support).
 *   **Production Plan**: Monthly production quantity and cost input.
 *   **Logistics Plan**: Configuration for initial inventory, warehouse capacity, and storage costs.
 *   **Financial Plan**: Budget setting for each department.
 *   **AI Proposals**: Suggestions for inventory optimization and risk mitigation.
-*   **Data Persistence**: Local data storage using SQLite.
+*   **Data Persistence**: SQLite (local) / PostgreSQL (production) with automatic schema management.
 
 ## How to Run Locally
 
