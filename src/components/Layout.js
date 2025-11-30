@@ -22,7 +22,7 @@ export default function Layout({ children }) {
     return (
         <div className={styles.container}>
             <aside className={styles.sidebar}>
-                <div className={styles.logo}>S&OP Planner</div>
+                <div className={styles.logo}>S&OP MVP App</div>
                 <nav className={styles.nav}>
                     {navItems.map((item) => {
                         const Icon = item.icon;
@@ -43,7 +43,7 @@ export default function Layout({ children }) {
             <main className={styles.main}>
                 <header className={styles.header}>
                     <h1 className={styles.title}>
-                        {navItems.find((item) => item.href === pathname)?.name || "S&OP Planner"}
+                        {navItems.find((item) => item.href === pathname)?.name || "S&OP MVP App"}
                     </h1>
                     <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                         <ScenarioSelector />
