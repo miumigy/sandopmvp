@@ -32,73 +32,38 @@
     padding: 6px;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    color: #64748b;
+    transition: all 0.2s;
+}
 
+.button:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
     .container {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background-color: #f8fafc;
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid #e2e8f0;
+        flex-wrap: wrap;
+        padding: 6px;
+        gap: 6px;
     }
 
     .select {
-        padding: 6px 12px;
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
-        background-color: white;
-        font-size: 14px;
-        min-width: 150px;
+        font-size: 13px;
+        min-width: 120px;
+        padding: 5px 10px;
     }
 
     .input {
-        padding: 6px 12px;
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
-        font-size: 14px;
-        width: 150px;
+        font-size: 13px;
+        width: 120px;
+        padding: 5px 10px;
     }
 
     .button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px;
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
-        background-color: white;
-        cursor: pointer;
-        color: #64748b;
-        transition: all 0.2s;
+        padding: 5px;
     }
-
-    .button:hover {
-        background-color: #f1f5f9;
-        color: #0f172a;
-    }
-
-    /* Mobile Responsive Design */
-    @media (max-width: 768px) {
-        .container {
-            flex-wrap: wrap;
-            padding: 6px;
-            gap: 6px;
-        }
-
-        .select {
-            font-size: 13px;
-            min-width: 120px;
-            padding: 5px 10px;
-        }
-
-        .input {
-            font-size: 13px;
-            width: 120px;
-            padding: 5px 10px;
-        }
-
-        .button {
-            padding: 5px;
-        }
-    }
+}
