@@ -16,6 +16,9 @@ export default function ProductionPage() {
         <div>
             <h1>Production Plan</h1>
             <p>Enter the 12-month production schedule.</p>
+            <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '-0.5rem' }}>
+                <strong>Note:</strong> Production quantities will arrive in the warehouse and become available as inventory in the <strong>following month</strong>.
+            </p>
             <InputTable
                 title="Monthly Production Schedule"
                 data={productionPlan}

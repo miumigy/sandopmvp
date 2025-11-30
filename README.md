@@ -7,7 +7,7 @@ This application is a Minimum Viable Product (MVP) for Sales and Operations Plan
 *   **Dashboard**: Visualization of PSI (Production, Sales, Inventory), Opportunity Loss, AI Proposals, and Financial Performance (Budget vs Actual).
 *   **Scenario Management**: Create and switch between multiple S&OP scenarios for What-If analysis.
 *   **Sales Plan**: Monthly sales quantity and price input (Spreadsheet-like UI, Copy-Paste support).
-*   **Production Plan**: Monthly production quantity and cost input.
+*   **Production Plan**: Monthly production quantity and cost input. Production arrives in warehouse the following month.
 *   **Logistics Plan**: Configuration for initial inventory, warehouse capacity, and storage costs.
 *   **Financial Plan**: Budget setting for each department.
 *   **AI Proposals**: Suggestions for inventory optimization and risk mitigation.
@@ -89,6 +89,15 @@ graph TD
     DB --> Logic
     Logic --> API
 ```
+
+## PSI Calculation Logic
+
+The application calculates Production-Sales-Inventory (PSI) with the following key assumptions:
+
+*   **Production Lead Time**: Production quantities entered for month N will arrive in the warehouse and become available as inventory in **month N+1**.
+*   **Sales Fulfillment**: Sales demand is fulfilled from available inventory (initial inventory + production from previous month).
+*   **Opportunity Loss**: When demand exceeds available inventory, the unfulfilled quantity is recorded as opportunity loss.
+*   **Storage Costs**: Calculated based on ending inventory and configured storage cost rates.
 
 ## Database Configuration
 
