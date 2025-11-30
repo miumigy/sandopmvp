@@ -13,6 +13,16 @@
   margin-bottom: 2rem;
 }
 
+.sectionTitle {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #334155;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
 .chartsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
