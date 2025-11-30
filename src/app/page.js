@@ -53,8 +53,12 @@ export default function Dashboard() {
   const totalProfit = psiResults.monthlyProfit.reduce((acc, curr) => acc + curr, 0);
 
   const totalSalesBudget = financialPlan.reduce((acc, curr) => acc + Number(curr.salesBudget || 0), 0);
+  const totalProductionBudget = financialPlan.reduce((acc, curr) => acc + Number(curr.productionBudget || 0), 0);
+  const totalLogisticsBudget = financialPlan.reduce((acc, curr) => acc + Number(curr.logisticsBudget || 0), 0);
+  const totalProfitBudget = totalSalesBudget - totalProductionBudget - totalLogisticsBudget;
 
   const salesAchievementRate = totalSalesBudget > 0 ? ((totalSalesAmount / totalSalesBudget) * 100).toFixed(1) : 0;
+  const profitAchievementRate = totalProfitBudget > 0 ? ((totalProfit / totalProfitBudget) * 100).toFixed(1) : 0;
 
   return (
     <div className={styles.container}>
@@ -75,7 +79,13 @@ export default function Dashboard() {
           color="blue"
           trend={`Budget: $${totalSalesBudget.toLocaleString()} (${salesAchievementRate}%)`}
         />
-        <KPICard title="Total Profit" value={`$${totalProfit.toLocaleString()}`} unit="" color="green" />
+        <KPICard
+          title="Total Profit"
+          value={`$${totalProfit.toLocaleString()}`}
+          unit=""
+          color="green"
+          trend={`Budget: $${totalProfitBudget.toLocaleString()} (${profitAchievementRate}%)`}
+        />
       </div>
 
       <div className={styles.chartsGrid}>
