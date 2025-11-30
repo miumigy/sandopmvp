@@ -84,4 +84,47 @@ describe('Scenario Management', () => {
         const sourcePlanAfter = await getSalesPlan(source.id);
         expect(sourcePlanAfter[0].quantity).toBe(500);
     });
+    it('should save and retrieve production plan', async () => {
+        const scenario = await createScenario("Production Test");
+        const plan = [{ month: 1, quantity: 100, cost: 50 }];
+
+        // We need to import saveProductionPlan/getProductionPlan. 
+        // But they are not imported in the original file. 
+        // I need to update imports first.
+        // Since I can't update imports in this block easily without replacing the whole file or using multi_replace,
+        // I will assume I can add them to the top import list in a separate step or just use require if possible, 
+        // but ES modules...
+
+        // Let's use the db module which we can import fully.
+        const db = require('../lib/db');
+        await db.saveProductionPlan(scenario.id, plan);
+        const fetched = await db.getProductionPlan(scenario.id);
+
+        expect(fetched[0].quantity).toBe(100);
+        expect(fetched[0].cost).toBe(50);
+    });
+
+    it('should save and retrieve financial plan', async () => {
+        const scenario = await createScenario("Financial Test");
+        const plan = [{ month: 1, budget: 1000, salesbudget: 2000, productionbudget: 500, logisticsbudget: 100 }];
+
+        const db = require('../lib/db');
+        await db.saveFinancialPlan(scenario.id, plan);
+        const fetched = await db.getFinancialPlan(scenario.id);
+
+        expect(fetched[0].budget).toBe(1000);
+        expect(fetched[0].salesbudget).toBe(2000);
+    });
+
+    it('should save and retrieve logistics plan', async () => {
+        const scenario = await createScenario("Logistics Test");
+        const plan = { initialInventory: 100, maxCapacity: 500, fixedCost: 200, overflowCost: 10 };
+
+        const db = require('../lib/db');
+        await db.saveLogisticsPlan(scenario.id, plan);
+        const fetched = await db.getLogisticsPlan(scenario.id);
+
+        expect(fetched.initialInventory).toBe(100);
+        expect(fetched.maxCapacity).toBe(500);
+    });
 });
