@@ -24,86 +24,6 @@
     border-collapse: collapse;
     font-size: 0.9rem;
     table-layout: fixed;
-    /* Ensures columns don't jump around */
-}
-
-.headerCell {
-    background: #f9fafb;
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    font-weight: 600;
-    color: #666;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.monthCell {
-    background: #f9fafb;
-    padding: 0.5rem;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    font-weight: 500;
-    color: #444;
-    width: 60px;
-}
-
-.cell {
-    padding: 0;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-}
-
-.input {
-    width: 100%;
-    height: 100%;
-    padding: 0.75rem;
-    border: none;
-    font-size: 0.9rem;
-    background: transparent;
-    font-family: inherit;
-    text-align: right;
-}
-
-.input:focus {
-    outline: 2px solid var(--primary);
-    outline-offset: -2px;
-    background: rgba(0, 112, 243, 0.05);
-    z-index: 1;
-    position: relative;
-}
-
-/* Remove spinner buttons for number input */
-.container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--foreground);
-}
-
-.tableWrapper {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    table-layout: fixed;
-    /* Ensures columns don't jump around */
 }
 
 .headerCell {
@@ -164,6 +84,7 @@
 
 .input[type=number] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 /* Mobile Responsive Design */
